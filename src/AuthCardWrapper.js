@@ -23,7 +23,7 @@ const AuthCardWrapper = ({ children, ...other }) => (
         {...other}
         // title="PIXAPEN"
     >
-        <Box sx={{ p: { xs: 0, sm: 3, xl: 5 } }}>
+        <Box sx={{ p: { xs: 0, sm: 2, xl: 5 } }}>
             {children}
         </Box>
     </MainCard>

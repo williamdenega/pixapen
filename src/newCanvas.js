@@ -343,10 +343,11 @@ const GridCanvas = () => {
         <Grid
           container
           justifyContent="center"
+          mt={0}
           alignItems="center"
-          sx={{ minHeight: "calc(100vh - 0px)", marginTop: 0 }}
+          sx={{ minHeight: "calc(100vh - 0px)" }}
         >
-          <Grid item sx={{ m: { xs: 2, sm: 2 }, mb: 0, mt: 0 }}>
+          <Grid item sx={{ m: { xs: 1, sm: 2 }, mb: 0, mt: 0 }}>
             <AuthCardWrapper>
               <Grid
                 container
@@ -446,7 +447,7 @@ const GridCanvas = () => {
                               onMouseDown={startDrawing}
                               onMouseMove={draw}
                               onMouseUp={stopDrawing}
-                              onMouseOut={stopDrawing}
+                              //   onMouseOut={stopDrawing}
                               onTouchStart={startDrawing}
                               onTouchMove={draw}
                               onTouchEnd={stopDrawing}
