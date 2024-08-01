@@ -1,254 +1,328 @@
 function chebyshevDistance(x1, y1, x2, y2) {
-    return Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
+  return Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
 }
 
 function closestDistanceChebyshev(targetSet, guessPoint, distanceCounts) {
-    let minDistance = Infinity;
+  let minDistance = Infinity;
 
-    targetSet.forEach((point) => {
-        const distance = chebyshevDistance(point[0], point[1], guessPoint[0], guessPoint[1]);
-        if (distance < minDistance) {
-            minDistance = distance;
-        }
-    });
-
-    // Update the distance count
-    if (distanceCounts[minDistance] !== undefined) {
-        distanceCounts[minDistance]++;
-    } else {
-        distanceCounts[minDistance] = 1;
+  targetSet.forEach((point) => {
+    const distance = chebyshevDistance(
+      point[0],
+      point[1],
+      guessPoint[0],
+      guessPoint[1]
+    );
+    if (distance < minDistance) {
+      minDistance = distance;
     }
+  });
 
-    return minDistance;
+  // Update the distance count
+  if (distanceCounts[minDistance] !== undefined) {
+    distanceCounts[minDistance]++;
+  } else {
+    distanceCounts[minDistance] = 1;
+  }
+
+  return minDistance;
 }
 
 function calculateExponentialPenalty(distance) {
-    // Exponential penalty function (e.g., penalty = 2^distance)
-    return Math.pow(2, distance);
+  // Exponential penalty function (e.g., penalty = 2^distance)
+  return Math.pow(2, distance);
 }
 
-export function calculateTotalScoreChebyshev(targetSet, guessSet, updateFilledSquares) {
-    let totalScore = 0;
-    let distanceCounts = {}; // Object to track distance counts
+export function calculateTotalScoreChebyshev(
+  targetSet,
+  guessSet,
+  updateFilledSquares
+) {
+  let totalScore = 0;
+  let distanceCounts = {}; // Object to track distance counts
 
-    const updatedGuessSet = guessSet.map((guessPoint) => {
-        // Check if the guess point already exists in the target set
-        const existsInTarget = targetSet.some((targetPoint) => targetPoint[0] === guessPoint[0] && targetPoint[1] === guessPoint[1]);
+  // Convert targetSet and guessSet to Sets for uniqueness
+  const uniqueTargetSet = new Set(targetSet.map((point) => point.join(",")));
+  const uniqueGuessSet = new Set(guessSet.map((point) => point.join(",")));
 
-        let minDistance;
-        if (!existsInTarget) {
-            minDistance = closestDistanceChebyshev(targetSet, guessPoint, distanceCounts);
-            const penalty = calculateExponentialPenalty(minDistance);
-            totalScore -= penalty; // Deduct exponential penalty based on distance
-        } else {
-            // If the distance is zero (point exists in target), still track it
-            if (distanceCounts[0] !== undefined) {
-                distanceCounts[0]++;
-            } else {
-                distanceCounts[0] = 1;
-            }
-            minDistance = 0;
-        }
-        return [...guessPoint, minDistance];
-    });
+  const updatedGuessSet = guessSet.map((guessPoint) => {
+    // Check if the guess point already exists in the target set
+    const existsInTarget = uniqueTargetSet.has(guessPoint.join(","));
 
-    // Update the state with the new guess points including distances
-    // console.log(updatedGuessSet);
-    // console.log(totalScore);
-    updateFilledSquares(updatedGuessSet);
-    console.log('Distance Counts:', distanceCounts);
-    return [distanceCounts, updatedGuessSet];
+    let minDistance;
+    if (!existsInTarget) {
+      minDistance = closestDistanceChebyshev(
+        targetSet,
+        guessPoint,
+        distanceCounts
+      );
+      const penalty = calculateExponentialPenalty(minDistance);
+      totalScore -= penalty; // Deduct exponential penalty based on distance
+    } else {
+      // If the distance is zero (point exists in target), still track it
+      if (distanceCounts[0] !== undefined) {
+        distanceCounts[0]++;
+      } else {
+        distanceCounts[0] = 1;
+      }
+      minDistance = 0;
+    }
+    return [...guessPoint, minDistance];
+  });
+
+  // Calculate how many unique targetSet points were not in unique guessSet
+  const missingTargetPointsCount = Array.from(uniqueTargetSet).reduce(
+    (count, targetPoint) => {
+      const targetKey = targetPoint;
+      if (!uniqueGuessSet.has(targetKey)) {
+        count++;
+      }
+      return count;
+    },
+    0
+  );
+  //   const perfectScore =
+  //     (distanceCounts["0"] ? distanceCounts["0"] : 0 + missingTargetPointsCount) *
+  //     100;
+  //   //   const userScore = (distanceCounts)
+  //   const missedPointsPenalty = missingTargetPointsCount * 100;
+  // Update the state with the new guess points including distances
+  updateFilledSquares(updatedGuessSet);
+//   console.log("Distance Counts:", distanceCounts);
+//   console.log("Missing Target Points Count:", missingTargetPointsCount);
+  // Base value per pixel
+  // Base value per pixel
+  const baseValuePerPixel = 100;
+
+  // Penalty per space away from the target
+  const penaltyPerSpace = 25;
+
+  // Calculate total points from correctly placed pixels
+  const totalPixels = Object.entries(distanceCounts).reduce(
+    (total, [distance, count]) => {
+      const distanceValue = parseInt(distance, 10);
+      const penalty = distanceValue * penaltyPerSpace;
+      return total + (baseValuePerPixel - penalty) * count;
+    },
+    0
+  );
+
+  // Calculate penalty for missed target points
+  const missedTargetPenalty = missingTargetPointsCount * penaltyPerSpace;
+
+  // Calculate the final score
+  const finalScore = totalPixels - missedTargetPenalty;
+
+  // Calculate the perfect score
+  const totalPixelsCount =
+    Object.values(distanceCounts).reduce((sum, count) => sum + count, 0) +
+    missingTargetPointsCount;
+  const perfectScore = totalPixelsCount * baseValuePerPixel;
+
+  // Calculate the percentage score
+  //   const percentageScore = (finalScore / perfectScore) * 100;
+  const clampedPercentageScore = Math.max((finalScore / perfectScore) * 100, 0);
+  //   constg
+  const percent = clampedPercentageScore.toFixed(2);
+//   console.log(`Final Score: ${finalScore}`);
+//   console.log(`Perfect Score: ${perfectScore}`);
+//   console.log(`Percentage Score: ${clampedPercentageScore.toFixed(2)}%`);
+  return [distanceCounts, updatedGuessSet, missingTargetPointsCount, percent];
 }
 
 export function getRandomPathNearMiddle(gridSize, radius, pathLength) {
-    // Function to get a random point near the middle
-    function getRandomPointNearMiddle(gridSize, radius) {
-        const centerX = Math.floor(gridSize / 2);
-        const centerY = Math.floor(gridSize / 2);
-        const minX = Math.max(0, centerX - radius);
-        const maxX = Math.min(gridSize - 1, centerX + radius);
-        const minY = Math.max(0, centerY - radius);
-        const maxY = Math.min(gridSize - 1, centerY + radius);
+  // Function to get a random point near the middle
+  function getRandomPointNearMiddle(gridSize, radius) {
+    const centerX = Math.floor(gridSize / 2);
+    const centerY = Math.floor(gridSize / 2);
+    const minX = Math.max(0, centerX - radius);
+    const maxX = Math.min(gridSize - 1, centerX + radius);
+    const minY = Math.max(0, centerY - radius);
+    const maxY = Math.min(gridSize - 1, centerY + radius);
 
-        const x = Math.floor(Math.random() * (maxX - minX + 1)) + minX;
-        const y = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
+    const x = Math.floor(Math.random() * (maxX - minX + 1)) + minX;
+    const y = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
 
-        return { x, y };
+    return { x, y };
+  }
+
+  // Function to get the next point from the current point
+  function getNextPoint(x, y) {
+    const directions = [
+      { dx: 0, dy: 1 }, // Down
+      { dx: 0, dy: -1 }, // Up
+      { dx: 1, dy: 0 }, // Right
+      { dx: -1, dy: 0 }, // Left
+    ];
+
+    const dir = directions[Math.floor(Math.random() * directions.length)];
+    const nextX = x + dir.dx;
+    const nextY = y + dir.dy;
+
+    return { x: nextX, y: nextY };
+  }
+
+  let path = [];
+  let currentPoint = getRandomPointNearMiddle(gridSize, radius);
+  path.push([currentPoint.x, currentPoint.y]);
+
+  for (let i = 1; i < pathLength; i++) {
+    let nextPoint = getNextPoint(currentPoint.x, currentPoint.y);
+
+    // Ensure the next point is within the grid boundaries
+    while (
+      nextPoint.x < 0 ||
+      nextPoint.x >= gridSize ||
+      nextPoint.y < 0 ||
+      nextPoint.y >= gridSize
+    ) {
+      nextPoint = getNextPoint(currentPoint.x, currentPoint.y);
     }
 
-    // Function to get the next point from the current point
-    function getNextPoint(x, y) {
-        const directions = [
-            { dx: 0, dy: 1 }, // Down
-            { dx: 0, dy: -1 }, // Up
-            { dx: 1, dy: 0 }, // Right
-            { dx: -1, dy: 0 } // Left
-        ];
-
-        const dir = directions[Math.floor(Math.random() * directions.length)];
-        const nextX = x + dir.dx;
-        const nextY = y + dir.dy;
-
-        return { x: nextX, y: nextY };
-    }
-
-    let path = [];
-    let currentPoint = getRandomPointNearMiddle(gridSize, radius);
-    path.push([currentPoint.x, currentPoint.y]);
-
-    for (let i = 1; i < pathLength; i++) {
-        let nextPoint = getNextPoint(currentPoint.x, currentPoint.y);
-
-        // Ensure the next point is within the grid boundaries
-        while (nextPoint.x < 0 || nextPoint.x >= gridSize || nextPoint.y < 0 || nextPoint.y >= gridSize) {
-            nextPoint = getNextPoint(currentPoint.x, currentPoint.y);
-        }
-
-        path.push([nextPoint.x, nextPoint.y]);
-        currentPoint = nextPoint;
-    }
-    // setCoords(path);
-    // console.log(coords);
-    // console.log(path)
-    return path;
+    path.push([nextPoint.x, nextPoint.y]);
+    currentPoint = nextPoint;
+  }
+  // setCoords(path);
+  // console.log(coords);
+  // console.log(path)
+  return path;
 }
 
 export const numbers = [
-    [
-        [14, 17],
-        [14, 18],
-        [13, 18],
-        [13, 19],
-        [12, 19],
-        [12, 20],
-        [11, 20],
-        [11, 21],
-        [12, 21],
-        [13, 21],
-        [14, 21],
-        [15, 21],
-        [16, 21],
-        [17, 21],
-        [18, 21],
-        [19, 21],
-        [20, 21],
-        [21, 21],
-        [22, 21],
-        [23, 21],
-        [24, 21],
-        [25, 21],
-        [26, 21],
-        [27, 21],
-        [27, 20],
-        [27, 19],
-        [27, 18],
-        [27, 17],
-        [27, 16],
-        [27, 22],
-        [27, 23],
-        [27, 24],
-        [27, 25]
-    ],
-    [
-        [12, 15],
-        [12, 16],
-        [12, 17],
-        [12, 18],
-        [12, 19],
-        [12, 20],
-        [12, 21],
-        [13, 21],
-        [13, 22],
-        [14, 22],
-        [14, 23],
-        [15, 23],
-        [16, 23],
-        [17, 23],
-        [18, 23],
-        [19, 23],
-        [20, 23],
-        [21, 23],
-        [22, 23],
-        [22, 22],
-        [23, 22],
-        [24, 22],
-        [24, 21],
-        [25, 21],
-        [26, 20],
-        [27, 20],
-        [27, 19],
-        [28, 18],
-        [28, 17],
-        [29, 17],
-        [29, 16],
-        [29, 15],
-        [29, 14],
-        [28, 14],
-        [27, 14],
-        [26, 13],
-        [25, 13],
-        [24, 14],
-        [24, 15],
-        [23, 15],
-        [23, 16],
-        [23, 17],
-        [23, 18],
-        [24, 18],
-        [24, 19],
-        [24, 20],
-        [25, 20],
-        [26, 21],
-        [26, 22],
-        [26, 23],
-        [27, 23],
-        [27, 24],
-        [27, 25],
-        [28, 25],
-        [28, 26]
-    ],
-    [
-        [13, 17],
-        [13, 18],
-        [13, 19],
-        [13, 20],
-        [13, 21],
-        [13, 22],
-        [13, 23],
-        [14, 23],
-        [14, 23],
-        [14, 23],
-        [14, 23],
-        [14, 24],
-        [15, 24],
-        [16, 24],
-        [17, 24],
-        [18, 24],
-        [18, 23],
-        [19, 23],
-        [19, 22],
-        [19, 21],
-        [20, 21],
-        [20, 20],
-        [20, 19],
-        [20, 18],
-        [20, 17],
-        [20, 22],
-        [20, 23],
-        [21, 23],
-        [21, 24],
-        [22, 24],
-        [23, 24],
-        [24, 24],
-        [24, 23],
-        [25, 23],
-        [25, 22],
-        [26, 22],
-        [26, 21],
-        [26, 20],
-        [26, 19],
-        [26, 18],
-        [26, 17]
-    ]
+  [
+    [14, 17],
+    [14, 18],
+    [13, 18],
+    [13, 19],
+    [12, 19],
+    [12, 20],
+    [11, 20],
+    [11, 21],
+    [12, 21],
+    [13, 21],
+    [14, 21],
+    [15, 21],
+    [16, 21],
+    [17, 21],
+    [18, 21],
+    [19, 21],
+    [20, 21],
+    [21, 21],
+    [22, 21],
+    [23, 21],
+    [24, 21],
+    [25, 21],
+    [26, 21],
+    [27, 21],
+    [27, 20],
+    [27, 19],
+    [27, 18],
+    [27, 17],
+    [27, 16],
+    [27, 22],
+    [27, 23],
+    [27, 24],
+    [27, 25],
+  ],
+  [
+    [12, 15],
+    [12, 16],
+    [12, 17],
+    [12, 18],
+    [12, 19],
+    [12, 20],
+    [12, 21],
+    [13, 21],
+    [13, 22],
+    [14, 22],
+    [14, 23],
+    [15, 23],
+    [16, 23],
+    [17, 23],
+    [18, 23],
+    [19, 23],
+    [20, 23],
+    [21, 23],
+    [22, 23],
+    [22, 22],
+    [23, 22],
+    [24, 22],
+    [24, 21],
+    [25, 21],
+    [26, 20],
+    [27, 20],
+    [27, 19],
+    [28, 18],
+    [28, 17],
+    [29, 17],
+    [29, 16],
+    [29, 15],
+    [29, 14],
+    [28, 14],
+    [27, 14],
+    [26, 13],
+    [25, 13],
+    [24, 14],
+    [24, 15],
+    [23, 15],
+    [23, 16],
+    [23, 17],
+    [23, 18],
+    [24, 18],
+    [24, 19],
+    [24, 20],
+    [25, 20],
+    [26, 21],
+    [26, 22],
+    [26, 23],
+    [27, 23],
+    [27, 24],
+    [27, 25],
+    [28, 25],
+    [28, 26],
+  ],
+  [
+    [13, 17],
+    [13, 18],
+    [13, 19],
+    [13, 20],
+    [13, 21],
+    [13, 22],
+    [13, 23],
+    [14, 23],
+    [14, 23],
+    [14, 23],
+    [14, 23],
+    [14, 24],
+    [15, 24],
+    [16, 24],
+    [17, 24],
+    [18, 24],
+    [18, 23],
+    [19, 23],
+    [19, 22],
+    [19, 21],
+    [20, 21],
+    [20, 20],
+    [20, 19],
+    [20, 18],
+    [20, 17],
+    [20, 22],
+    [20, 23],
+    [21, 23],
+    [21, 24],
+    [22, 24],
+    [23, 24],
+    [24, 24],
+    [24, 23],
+    [25, 23],
+    [25, 22],
+    [26, 22],
+    [26, 21],
+    [26, 20],
+    [26, 19],
+    [26, 18],
+    [26, 17],
+  ],
 ];
 
 // const sqaureCoords = [

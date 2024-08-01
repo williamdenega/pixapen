@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import AuthWrapper1 from "./AuthWrapper1";
 import AuthCardWrapper from "./AuthCardWrapper";
+import ReportDialog from "./ReportDialog";
 // import AuthFooter from 'ui-component/cards/AuthFooter';
 // import { Link } from 'react-router-dom';
 import {
@@ -29,15 +30,22 @@ const GridCanvas = () => {
   const [countdown, setCountdown] = useState(4); // Initialize countdown to 3
   const [distanceCounts, setDistanceCounts] = useState({});
   const [remainingTime, setRemainingTime] = useState(5);
-  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
+  //   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const drawingTimeoutRef = useRef(null);
   const intervalRef = useRef(null);
   const [showDialog, setShowDialog] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const radius = 5;
   const size = 15;
   const pathLength = 100;
   const [coords, setCoords] = useState([]);
   const [canvasSize, setCanvasSize] = useState({ width: 600, height: 600 });
+
+  const [scoreData, setScoreData] = useState({
+    distanceCounts: null,
+    missingTargetPointsCount: null,
+    percent: null,
+  });
 
   const drawGrid = useCallback(() => {
     // if (!isDrawingAllowed) return;
@@ -163,6 +171,12 @@ const GridCanvas = () => {
       };
 
       calculateAndDrawResults();
+
+      const reportTimer = setTimeout(() => {
+        setShowReport(true);
+      }, 500);
+
+      return () => clearTimeout(reportTimer);
     }
   }, [done]);
 
@@ -195,9 +209,9 @@ const GridCanvas = () => {
     if (!isDrawingAllowed || done) return;
     setIsDrawing(true);
     setRemainingTime(5); // Reset the countdown to 3 seconds
-    const { clientX, clientY } = e.type === "touchstart" ? e.touches[0] : e;
+    // const { clientX, clientY } = e.type === "touchstart" ? e.touches[0] : e;
 
-    setCursorPosition({ x: clientX, y: clientY });
+    // setCursorPosition({ x: clientX, y: clientY });
 
     fillSquare(e); // Your drawing logic here
 
@@ -231,8 +245,8 @@ const GridCanvas = () => {
     if (!isDrawingAllowed || done) return;
     if (isDrawing) {
       fillSquare(e); // Your drawing logic here
-      const { clientX, clientY } = e.type === "touchmove" ? e.touches[0] : e;
-      setCursorPosition({ x: clientX, y: clientY });
+      //   const { clientX, clientY } = e.type === "touchmove" ? e.touches[0] : e;
+      //   setCursorPosition({ x: clientX, y: clientY });
     }
   };
 
@@ -287,19 +301,33 @@ const GridCanvas = () => {
 
   const handleCalculateScore = async () => {
     return new Promise((resolve) => {
-      const result = calculateTotalScoreChebyshev(
-        coords,
-        filledSquares,
-        setFilledSquares
-      );
+      const [
+        distanceCounts,
+        updatedGuessSet,
+        missingTargetPointsCount,
+        percent,
+      ] = calculateTotalScoreChebyshev(coords, filledSquares, setFilledSquares);
       // console.log(`Your score: ${score}`);
       // console.log(result[1]);
-
-      setDistanceCounts(result[0]);
+      setScoreData({
+        distanceCounts,
+        // updatedGuessSet,
+        missingTargetPointsCount,
+        percent,
+      });
+      setDistanceCounts(distanceCounts);
+      console.log("missed sqaures: " + missingTargetPointsCount);
+      console.log(percent + "% accraucy");
       //   console.log(distanceCounts);
 
-      resolve(result[1]); // Resolve the promise once the score is calculated
+      resolve(updatedGuessSet); // Resolve the promise once the score is calculated
     });
+  };
+
+  const handleCanvasClick = () => {
+    if (done) {
+      setShowReport(true);
+    }
   };
 
   const pointsMapping = {
@@ -447,12 +475,12 @@ const GridCanvas = () => {
                               onMouseDown={startDrawing}
                               onMouseMove={draw}
                               onMouseUp={stopDrawing}
-                              //   onMouseOut={stopDrawing}
                               onTouchStart={startDrawing}
                               onTouchMove={draw}
                               onTouchEnd={stopDrawing}
                               onTouchCancel={stopDrawing}
                               onBlur={() => setIsDrawing(false)}
+                              onClick={handleCanvasClick} // Add onClick handler
                               style={{
                                 cursor: isDrawing ? "crosshair" : "default",
                                 display: "block",
@@ -466,7 +494,7 @@ const GridCanvas = () => {
                     )}
                   </Box>
                 </Grid>
-                {done && (
+                {/* {done && (
                   <Grid
                     item
                     sx={{ mb: 0 }}
@@ -490,7 +518,7 @@ const GridCanvas = () => {
                     })}
                     <div>Total Points: {totalPoints}</div>
                   </Grid>
-                )}
+                )} */}
                 <Grid
                   item
                   container
@@ -520,6 +548,11 @@ const GridCanvas = () => {
                 </Grid>
               </Grid>
             </AuthCardWrapper>
+            <ReportDialog
+              open={showReport}
+              onClose={() => setShowReport(false)}
+              scoreData={scoreData}
+            />
             <Dialog open={showDialog} onClose={() => setShowDialog(false)}>
               <DialogTitle>Instructions</DialogTitle>
               <Typography variant="body1">
