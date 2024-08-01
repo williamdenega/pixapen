@@ -338,26 +338,25 @@ const GridCanvas = () => {
         container
         direction="column"
         justifyContent="flex-end"
-        sx={{ minHeight: "100vh" }}
+        sx={{ minHeight: "100vh", marginTop: 0 }}
       >
-        {/* <Grid item xs={12}> */}
         <Grid
           container
           justifyContent="center"
           alignItems="center"
-          sx={{ minHeight: "calc(100vh - 30px)" }}
+          sx={{ minHeight: "calc(100vh - 0px)", marginTop: 0 }}
         >
-          <Grid item sx={{ m: { xs: 2, sm: 2 }, mb: 0 }}>
+          <Grid item sx={{ m: { xs: 2, sm: 2 }, mb: 0, mt: 0 }}>
             <AuthCardWrapper>
               <Grid
                 container
-                spacing={2}
+                spacing={!ready ? 10 : 0}
                 alignItems="center"
                 justifyContent="center"
               >
                 <Grid
                   item
-                  sx={{ mb: 0 }}
+                  sx={{ mb: 0, mt: 0 }}
                   xs={12}
                   alignItems="center"
                   textAlign="center"
@@ -405,7 +404,7 @@ const GridCanvas = () => {
                         <Grid item xs={12}>
                           <Box
                             sx={{
-                            //   backgroundColor: "lightblue",
+                              //   backgroundColor: "lightblue",
                               height: "40px", // Adjust height to fit the text
                               width: canvasSize.width, // Full width of the canvas
                               //   borderBottom: "1px solid blue",
@@ -461,11 +460,6 @@ const GridCanvas = () => {
                               }}
                             />
                           </Box>
-                          {/* <TimerDisplay
-                            remainingTime={remainingTime}
-                            cursorPosition={cursorPosition}
-                            isDrawingAllowed={isDrawingAllowed}
-                          /> */}
                         </Grid>
                       </Grid>
                     )}
