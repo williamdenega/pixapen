@@ -47,6 +47,40 @@ const ReportDialog = ({ open, onClose, scoreData }) => {
   const missingTargetPointsCount = scoreData?.missingTargetPointsCount || 0;
   const percent = scoreData?.percent || "0.00";
 
+  // Function to handle the share button click
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        const distanceCountsText = Object.entries(distanceCounts)
+          .map(([distance, count]) => {
+            const distanceText =
+              distance === "0"
+                ? "correct 🟩"
+                : distance === "1"
+                ? "1 space away 🟨"
+                : distance === "2"
+                ? "2 spaces away 🟧"
+                : `${distance} spaces away 🟥`;
+            return `${count} squares ${distanceText}`;
+          })
+          .join("\n"); // Use newline characters to separate lines
+
+        const shareText = `I scored ${percent}% in PixaPen!\n\n${distanceCountsText}\n\nMissed squares: ${missingTargetPointsCount} ❌`;
+
+        await navigator.share({
+          title: "Check out my game score!",
+          text: shareText,
+          url: window.location.href, // or any relevant URL
+        });
+        console.log("Share was successful.");
+      } catch (error) {
+        console.log("Sharing failed:", error);
+      }
+    } else {
+      console.log("Share API not supported");
+    }
+  };
+
   return (
     <CustomDialog open={open} onClose={onClose}>
       <CustomDialogTitle>
@@ -65,13 +99,6 @@ const ReportDialog = ({ open, onClose, scoreData }) => {
             {percent}% {parseFloat(percent) > 90 && "🏆"}
           </Typography>
         </CenteredContent>
-        {/* <Typography
-          variant="h6"
-          gutterBottom
-          sx={{ fontFamily: dialogFontFamily }}
-        >
-          Distance Counts
-        </Typography> */}
         <ul>
           {Object.entries(distanceCounts).length > 0 ? (
             Object.entries(distanceCounts).map(([distance, count]) => {
@@ -99,21 +126,20 @@ const ReportDialog = ({ open, onClose, scoreData }) => {
             <strong> {missingTargetPointsCount} missed squares ❌</strong>
           </li>
         </ul>
-        {/* <CenteredContent>
-          <Typography
-            variant="h6"
-            gutterBottom
-            sx={{ fontFamily: dialogFontFamily }}
-          >
-            Missed Squares: {missingTargetPointsCount}
-          </Typography>
-        </CenteredContent> */}
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ justifyContent: "center" }}>
         <Button
-          color="primary"
-          startIcon={<ShareIcon />}
-          sx={{ fontFamily: dialogFontFamily }}
+          variant="contained"
+          endIcon={<ShareIcon />}
+          sx={{
+            fontFamily: dialogFontFamily,
+            width: "100%",
+            backgroundColor: "#66CED6", // Custom button color
+            "&:hover": {
+              backgroundColor: "#4db4c1", // Color for hover state
+            },
+          }}
+          onClick={handleShare}
         >
           Share
         </Button>
