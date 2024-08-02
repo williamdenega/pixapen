@@ -4,12 +4,14 @@ import {
   Grid,
   Typography,
   Button,
-  Dialog,
-  DialogTitle,
+  //   Dialog,
+  //   DialogTitle,
 } from "@mui/material";
 import AuthWrapper1 from "./AuthWrapper1";
 import AuthCardWrapper from "./AuthCardWrapper";
 import ReportDialog from "./ReportDialog";
+import InstructionsDialog from "./InstructionsDialog";
+import SettingsDialog from "./SettingsDialog";
 // import AuthFooter from 'ui-component/cards/AuthFooter';
 // import { Link } from 'react-router-dom';
 import {
@@ -17,13 +19,14 @@ import {
   getRandomPathNearMiddle,
 } from "./mathStuff";
 // import TimerDisplay from "./TimerDisplay"; // Import the TimerDisplay component
-
+import SettingsIcon from "@mui/icons-material/Settings";
 const GridCanvas = () => {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [filledSquares, setFilledSquares] = useState([]);
   // const [squarePosition, setSquarePosition] = useState([]);
   // const [matchingPositions, setMatchingPositions] = useState([]);
+  const [showSettings, setShowSettings] = useState(false);
   const [ready, setReady] = useState(false);
   const [done, setDone] = useState(false);
   const [isDrawingAllowed, setIsDrawingAllowed] = useState(false);
@@ -136,6 +139,15 @@ const GridCanvas = () => {
   }, []); // Empty dependency array means this runs only once
 
   useEffect(() => {
+    // Check if the flag is already set in localStorage
+    const hasVisited = localStorage.getItem("hasVisited");
+
+    if (!hasVisited) {
+      // Set the flag to indicate that the user has visited
+      localStorage.setItem("hasVisited", "true");
+      setShowDialog(true); // Show the instructions dialog
+    }
+
     // console.log(size)
     setCoords(getRandomPathNearMiddle(size, radius, pathLength));
     // console.log(coords)
@@ -527,23 +539,56 @@ const GridCanvas = () => {
                   xs={12}
                 >
                   {!ready && (
-                    <Typography
-                      variant="subtitle1"
-                      onClick={() => setShowDialog(true)}
-                      sx={{
-                        textDecoration: "none",
-                        fontSize: "1.5rem", // Increase font size
-                        fontWeight: "bold", // Make the text bold
-                        color: "#000", // Change text color
-                        letterSpacing: "0.5px", // Adjust letter spacing
-                        "&:hover": {
-                          textDecoration: "underline", // Underline on hover
+                    <>
+                      <Typography
+                        variant="subtitle1"
+                        onClick={() => setShowDialog(true)}
+                        sx={{
+                          textDecoration: "none",
+                          fontSize: "1.5rem", // Increase font size
+                          fontWeight: "bold", // Make the text bold
+                          color: "#000", // Change text color
+                          letterSpacing: "0.5px", // Adjust letter spacing
+                          "&:hover": {
+                            textDecoration: "underline", // Underline on hover
+                            cursor: "pointer", // Change cursor to pointer on hover
+                          },
+                        }}
+                      >
+                        How to Play?
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center", // Align items vertically centered
                           cursor: "pointer", // Change cursor to pointer on hover
-                        },
-                      }}
-                    >
-                      How to Play?
-                    </Typography>
+                          "&:hover": {
+                            textDecoration: "underline", // Underline on hover
+                          },
+                        }}
+                        onClick={() => setShowSettings(true)}
+                      >
+                        <SettingsIcon
+                          sx={{
+                            marginRight: 1, // Space between icon and text
+                            fontSize: "1.5rem", // Match font size of text
+                            color: "#000", // Match text color
+                          }}
+                        />
+                        <Typography
+                          variant="subtitle2"
+                          sx={{
+                            textDecoration: "none",
+                            fontSize: "1.5rem", // Increase font size
+                            fontWeight: "bold", // Make the text bold
+                            color: "#000", // Change text color
+                            letterSpacing: "0.5px", // Adjust letter spacing
+                          }}
+                        >
+                          Settings
+                        </Typography>
+                      </Box>
+                    </>
                   )}
                 </Grid>
               </Grid>
@@ -553,13 +598,16 @@ const GridCanvas = () => {
               onClose={() => setShowReport(false)}
               scoreData={scoreData}
             />
-            <Dialog open={showDialog} onClose={() => setShowDialog(false)}>
-              <DialogTitle>Instructions</DialogTitle>
-              <Typography variant="body1">
-                Draw the shape that appears on the screen. The better you match
-                the shape, the higher your score!
-              </Typography>
-            </Dialog>
+            <InstructionsDialog
+              open={showDialog}
+              onClose={() => setShowDialog(false)}
+            />
+            <SettingsDialog
+              open={showSettings}
+              onClose={() => setShowSettings(false)}
+              //   currentDifficulty={difficulty}
+              //   onSave={handleSaveDifficulty}
+            />
           </Grid>
         </Grid>
         {/* </Grid> */}
