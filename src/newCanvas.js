@@ -4,28 +4,22 @@ import {
   Grid,
   Typography,
   Button,
-  //   Dialog,
-  //   DialogTitle,
 } from "@mui/material";
 import AuthWrapper1 from "./AuthWrapper1";
 import AuthCardWrapper from "./AuthCardWrapper";
 import ReportDialog from "./ReportDialog";
 import InstructionsDialog from "./InstructionsDialog";
 import SettingsDialog from "./SettingsDialog";
-// import AuthFooter from 'ui-component/cards/AuthFooter';
-// import { Link } from 'react-router-dom';
 import {
   calculateTotalScoreChebyshev,
   getRandomPathNearMiddle,
 } from "./mathStuff";
-// import TimerDisplay from "./TimerDisplay"; // Import the TimerDisplay component
 import SettingsIcon from "@mui/icons-material/Settings";
 const GridCanvas = () => {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [filledSquares, setFilledSquares] = useState([]);
-  // const [squarePosition, setSquarePosition] = useState([]);
-  // const [matchingPositions, setMatchingPositions] = useState([]);
+
   const [showSettings, setShowSettings] = useState(false);
   const [ready, setReady] = useState(false);
   const [done, setDone] = useState(false);
@@ -33,7 +27,6 @@ const GridCanvas = () => {
   const [countdown, setCountdown] = useState(4); // Initialize countdown to 3
   const [distanceCounts, setDistanceCounts] = useState({});
   const [remainingTime, setRemainingTime] = useState(5);
-  //   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const drawingTimeoutRef = useRef(null);
   const intervalRef = useRef(null);
   const [showDialog, setShowDialog] = useState(false);
@@ -156,9 +149,6 @@ const GridCanvas = () => {
   useEffect(() => {
     if (isDrawingAllowed) {
       drawGrid();
-      // resizeCanvas();
-      // window.addEventListener('resize', resizeCanvas);
-      // return () => window.removeEventListener('resize', resizeCanvas);
     }
   }, [drawGrid, isDrawingAllowed]);
 
@@ -506,31 +496,6 @@ const GridCanvas = () => {
                     )}
                   </Box>
                 </Grid>
-                {/* {done && (
-                  <Grid
-                    item
-                    sx={{ mb: 0 }}
-                    xs={12}
-                    alignItems="center"
-                    textAlign="center"
-                  >
-                    <div>distance | pixels</div>
-                    {Object.entries(distanceCounts).map(([key, value]) => {
-                      const distance = Number(key);
-                      const points = pointsMapping[key] || 0; // Default to 0 if key is not in the mapping
-                      const totalPointsForKey =
-                        distance <= 5 ? value * points : 0; // Calculate total points for this key
-
-                      return (
-                        <div key={key}>
-                          {value} pixels {key} space away (Total Points:{" "}
-                          {totalPointsForKey})
-                        </div>
-                      );
-                    })}
-                    <div>Total Points: {totalPoints}</div>
-                  </Grid>
-                )} */}
                 <Grid
                   item
                   container
@@ -605,8 +570,8 @@ const GridCanvas = () => {
             <SettingsDialog
               open={showSettings}
               onClose={() => setShowSettings(false)}
-              //   currentDifficulty={difficulty}
-              //   onSave={handleSaveDifficulty}
+            //   currentDifficulty={difficulty}
+            //   onSave={handleSaveDifficulty}
             />
           </Grid>
         </Grid>
