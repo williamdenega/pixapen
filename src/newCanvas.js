@@ -1,3 +1,6 @@
+
+
+
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import {
   Box,
@@ -12,9 +15,13 @@ import InstructionsDialog from "./InstructionsDialog";
 import SettingsDialog from "./SettingsDialog";
 import {
   calculateTotalScoreChebyshev,
-  getRandomPathNearMiddle,
+  getRandomPath,
+  getDailyPath,
 } from "./mathStuff";
+import DrawIcon from '@mui/icons-material/Draw';
 import SettingsIcon from "@mui/icons-material/Settings";
+import seedrandom from 'seedrandom';
+
 const GridCanvas = () => {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -31,9 +38,13 @@ const GridCanvas = () => {
   const intervalRef = useRef(null);
   const [showDialog, setShowDialog] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  //CONSTANTS
   const radius = 5;
   const size = 15;
   const pathLength = 100;
+  // const today = new Date().toISOString().split('T')[0];
+  // const rng = seedrandom(today);
+
   const [coords, setCoords] = useState([]);
   const [canvasSize, setCanvasSize] = useState({ width: 600, height: 600 });
 
@@ -140,10 +151,22 @@ const GridCanvas = () => {
       localStorage.setItem("hasVisited", "true");
       setShowDialog(true); // Show the instructions dialog
     }
+    // RNG for EST TimeZONE
+    // const now = new Date();
+    // const utcOffset = now.getTimezoneOffset() * 60000; // in milliseconds
+    // const easternOffset = -5 * 60 * 60000; // UTC-5 for Eastern Time
+    // const easternTime = new Date(now.getTime() + utcOffset + easternOffset);
+    // const today = easternTime.toISOString().split('T')[0];
+    // const rng = seedrandom(today);
 
-    // console.log(size)
-    setCoords(getRandomPathNearMiddle(size, radius, pathLength));
-    // console.log(coords)
+    // if (type === 'daily') {
+    //   const newCoords = getDailyPath(size, radius, pathLength, rng);
+    //   setCoords(newCoords);
+    // } else {
+    //   const newCoords = getRandomPath(size, radius, pathLength, rng);
+    //   setCoords(newCoords);
+    // }
+
   }, []);
 
   useEffect(() => {
@@ -297,7 +320,22 @@ const GridCanvas = () => {
     setFilledSquares(newFilledSquares);
   };
 
-  const handlePlay = () => {
+  const handlePlay = (type) => {
+    const now = new Date();
+    const utcOffset = now.getTimezoneOffset() * 60000; // in milliseconds
+    const easternOffset = -5 * 60 * 60000; // UTC-5 for Eastern Time
+    const easternTime = new Date(now.getTime() + utcOffset + easternOffset);
+    const today = easternTime.toISOString().split('T')[0];
+    const rng = seedrandom(today);
+
+    if (type === 'daily') {
+      const newCoords = getDailyPath(size, radius, pathLength, rng);
+      setCoords(newCoords);
+    } else {
+      const newCoords = getRandomPath(size, radius, pathLength, rng);
+      setCoords(newCoords);
+    }
+
     setReady(true);
   };
 
@@ -410,26 +448,30 @@ const GridCanvas = () => {
                   textAlign="center"
                 >
                   <Box>
-                    {!ready ? (
-                      <Button
-                        variant="contained"
-                        onClick={handlePlay}
-                        size="large"
-                        style={{
-                          padding: "30px 80px",
-                          fontSize: "3rem",
-                          // fontFamily: 'Comic Sans MS, cursive, sans-serif', // 90s font
-                          backgroundColor: "#FFFFFF", // white background
-                          color: "#000000", // black text
-                          border: "3px solid #000000", // bold border
-                          borderRadius: "0px", // rounded corners
-                          boxShadow: "4px 4px 8px rgba(0, 0, 0, 0.5)", // subtle shadow
-                          textTransform: "uppercase", // all caps
-                          letterSpacing: "1px", // slightly spaced letters
-                        }}
-                      >
-                        Play
-                      </Button>
+                    {!ready ? (<Grid container direction="column" alignItems="center" spacing={5}>
+                      <Grid item xs={12}>
+                        <Button
+                          variant="contained"
+                          onClick={(e) => handlePlay(e.target.value)}
+                          size="large"
+                          value='daily'
+                          style={{
+                            padding: "30px 80px",
+                            fontSize: "3rem",
+                            // fontFamily: 'Comic Sans MS, cursive, sans-serif', // 90s font
+                            backgroundColor: "#FFFFFF", // white background
+                            color: "#000000", // black text
+                            border: "3px solid #000000", // bold border
+                            borderRadius: "0px", // rounded corners
+                            boxShadow: "4px 4px 8px rgba(0, 0, 0, 0.5)", // subtle shadow
+                            textTransform: "uppercase", // all caps
+                            letterSpacing: "1px", // slightly spaced letters
+                          }}
+                        >
+                          Play
+                        </Button>
+                      </Grid>
+                    </Grid>
                     ) : (
                       <Grid container direction="column" alignItems="center">
                         <Grid item xs={12}>
@@ -505,23 +547,39 @@ const GridCanvas = () => {
                 >
                   {!ready && (
                     <>
-                      <Typography
-                        variant="subtitle1"
-                        onClick={() => setShowDialog(true)}
+                      <Box
                         sx={{
-                          textDecoration: "none",
-                          fontSize: "1.5rem", // Increase font size
-                          fontWeight: "bold", // Make the text bold
-                          color: "#000", // Change text color
-                          letterSpacing: "0.5px", // Adjust letter spacing
+                          display: "flex",
+                          alignItems: "center", // Align items vertically centered
+                          cursor: "pointer", // Change cursor to pointer on hover
                           "&:hover": {
                             textDecoration: "underline", // Underline on hover
-                            cursor: "pointer", // Change cursor to pointer on hover
                           },
                         }}
+                        onClick={(e) => handlePlay(e.target.value)}
+                        value='daily'
                       >
-                        How to Play?
-                      </Typography>
+                        <DrawIcon
+                          sx={{
+                            marginRight: 1, // Space between icon and text
+                            fontSize: "1.5rem", // Match font size of text
+                            color: "#000", // Match text color
+                          }}
+                        />
+                        <Typography
+                          variant="subtitle2"
+                          sx={{
+                            textDecoration: "none",
+                            fontSize: "1.5rem", // Increase font size
+                            fontWeight: "bold", // Make the text bold
+                            color: "#000", // Change text color
+                            letterSpacing: "0.5px", // Adjust letter spacing
+                          }}
+                        >
+                          Practice
+                        </Typography>
+                      </Box>
+
                       <Box
                         sx={{
                           display: "flex",
@@ -553,6 +611,23 @@ const GridCanvas = () => {
                           Settings
                         </Typography>
                       </Box>
+                      <Typography
+                        variant="subtitle1"
+                        onClick={() => setShowDialog(true)}
+                        sx={{
+                          textDecoration: "none",
+                          fontSize: "1.5rem", // Increase font size
+                          fontWeight: "bold", // Make the text bold
+                          color: "#000", // Change text color
+                          letterSpacing: "0.5px", // Adjust letter spacing
+                          "&:hover": {
+                            textDecoration: "underline", // Underline on hover
+                            cursor: "pointer", // Change cursor to pointer on hover
+                          },
+                        }}
+                      >
+                        How to Play?
+                      </Typography>
                     </>
                   )}
                 </Grid>

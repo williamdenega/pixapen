@@ -10,22 +10,30 @@ import CloseIcon from "@mui/icons-material/Close";
 import ShareIcon from "@mui/icons-material/Share";
 import { styled } from "@mui/material/styles";
 
-// Define a custom font style
-const dialogFontFamily = '"Roboto", "Arial", sans-serif'; // Change this to your desired font
+// Font families
+const titleFontFamily = '"Pixelify Sans", "Press Start 2P", monospace';
+const bodyFontFamily = '"Arial", "Roboto", sans-serif';
 
 // Styled Dialog component
 const CustomDialog = styled(Dialog)({
-  fontFamily: dialogFontFamily,
+  "& .MuiPaper-root": {
+    backgroundColor: "#fff",
+    border: "4px solid #000",
+    borderRadius: "0px",
+    boxShadow: "8px 8px 0px rgba(0, 0, 0, 0.2)",
+  },
 });
 
 // Styled DialogTitle to customize the title
 const CustomDialogTitle = styled(DialogTitle)(({ theme }) => ({
   textAlign: "center",
-  fontSize: "1.5rem",
+  fontSize: "2rem",
   fontWeight: "bold",
   padding: theme.spacing(2),
   position: "relative",
-  fontFamily: dialogFontFamily,
+  fontFamily: bodyFontFamily,
+  borderBottom: "4px solid #000",
+  backgroundColor: "#66CED6",
 }));
 
 // Styled IconButton for the close button
@@ -33,14 +41,26 @@ const CloseButton = styled(IconButton)(({ theme }) => ({
   position: "absolute",
   top: theme.spacing(1),
   left: theme.spacing(1),
+  color: "#000",
 }));
 
 // Container for centered content
 const CenteredContent = styled("div")(({ theme }) => ({
   textAlign: "center",
   margin: theme.spacing(2, 0),
-  fontFamily: dialogFontFamily,
 }));
+
+const StyledList = styled("ul")(({ theme }) => ({
+  listStyle: "none",
+  padding: 0,
+  margin: theme.spacing(2, 0),
+  fontFamily: bodyFontFamily,
+  fontSize: "1.2rem",
+}));
+
+const StyledListItem = styled("li")({
+  marginBottom: "8px",
+});
 
 const ReportDialog = ({ open, onClose, scoreData }) => {
   const distanceCounts = scoreData?.distanceCounts || {};
@@ -57,10 +77,10 @@ const ReportDialog = ({ open, onClose, scoreData }) => {
               distance === "0"
                 ? "correct 🟩"
                 : distance === "1"
-                ? "1 space away 🟨"
-                : distance === "2"
-                ? "2 spaces away 🟧"
-                : `${distance} spaces away 🟥`;
+                  ? "1 space away 🟨"
+                  : distance === "2"
+                    ? "2 spaces away 🟧"
+                    : `${distance} spaces away 🟥`;
             return `${count} squares ${distanceText}`;
           })
           .join("\n"); // Use newline characters to separate lines
@@ -81,10 +101,28 @@ const ReportDialog = ({ open, onClose, scoreData }) => {
     }
   };
 
+  // Determine the emoji based on the percentage score
+  const scoreEmoji =
+    parseFloat(percent) >= 90
+      ? "🏆"
+      : parseFloat(percent) >= 80
+        ? "👍"
+        : parseFloat(percent) >= 70
+          ? "😊"
+          : parseFloat(percent) == 69
+            ? "😉"
+            : parseFloat(percent) >= 60
+              ? "😐"
+              : parseFloat(percent) >= 50
+                ? "😕"
+                : parseFloat(percent) >= 40
+                  ? "😞"
+                  : "😢";
+
   return (
     <CustomDialog open={open} onClose={onClose}>
       <CustomDialogTitle>
-        Results
+        RESULTS
         <CloseButton onClick={onClose}>
           <CloseIcon />
         </CloseButton>
@@ -92,51 +130,77 @@ const ReportDialog = ({ open, onClose, scoreData }) => {
       <DialogContent>
         <CenteredContent>
           <Typography
-            variant="h4"
+            variant="h2"
             gutterBottom
-            sx={{ fontFamily: dialogFontFamily }}
+            sx={{
+              fontFamily: bodyFontFamily,
+              fontSize: "4rem",
+              fontWeight: "bold",
+              color: "#000",
+            }}
           >
-            {percent}% {parseFloat(percent) > 90 && "🏆"}
+            {percent}% {scoreEmoji}
           </Typography>
         </CenteredContent>
-        <ul>
+        <StyledList>
           {Object.entries(distanceCounts).length > 0 ? (
             Object.entries(distanceCounts).map(([distance, count]) => {
               const distanceText =
                 distance === "0"
                   ? "correct 🟩"
                   : distance === "1"
-                  ? "1 space away 🟨"
-                  : distance === "2"
-                  ? "2 spaces away 🟧"
-                  : `${distance} spaces away 🟥`;
+                    ? "1 space away 🟨"
+                    : distance === "2"
+                      ? "2 spaces away 🟧"
+                      : `${distance} spaces away 🟥`;
 
               return (
-                <li key={distance}>
-                  <strong>
+                <StyledListItem key={distance}>
+                  <Typography
+                    variant="body1"
+                    sx={{ fontWeight: "bold", fontFamily: bodyFontFamily }}
+                  >
                     {count} squares {distanceText}
-                  </strong>
-                </li>
+                  </Typography>
+                </StyledListItem>
               );
             })
           ) : (
-            <li>No distance counts available</li>
+            <StyledListItem>
+              <Typography
+                variant="body1"
+                sx={{ fontFamily: bodyFontFamily }}
+              >
+                No distance counts available
+              </Typography>
+            </StyledListItem>
           )}
-          <li>
-            <strong> {missingTargetPointsCount} missed squares ❌</strong>
-          </li>
-        </ul>
+          <StyledListItem>
+            <Typography
+              variant="body1"
+              sx={{ fontWeight: "bold", fontFamily: bodyFontFamily }}
+            >
+              {missingTargetPointsCount} missed squares ❌
+            </Typography>
+          </StyledListItem>
+        </StyledList>
       </DialogContent>
-      <DialogActions sx={{ justifyContent: "center" }}>
+      <DialogActions sx={{ justifyContent: "center", padding: 2 }}>
         <Button
           variant="contained"
           endIcon={<ShareIcon />}
           sx={{
-            fontFamily: dialogFontFamily,
-            width: "100%",
-            backgroundColor: "#66CED6", // Custom button color
+            fontFamily: bodyFontFamily,
+            fontSize: "1.5rem",
+            padding: "16px 32px",
+            backgroundColor: "#66CED6",
+            color: "#000",
+            border: "4px solid #000",
+            borderRadius: "0px",
+            boxShadow: "4px 4px 0px rgba(0, 0, 0, 0.2)",
+            textTransform: "uppercase",
             "&:hover": {
-              backgroundColor: "#4db4c1", // Color for hover state
+              backgroundColor: "#4db4c1",
             },
           }}
           onClick={handleShare}
