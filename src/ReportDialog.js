@@ -118,8 +118,9 @@ const ReportDialog = ({ open, onClose, scoreData, puzzleType, handleRedo }) => {
                 ? "😕"
                 : parseFloat(percent) >= 40
                   ? "😞"
-                  : "😢";
-
+                  : parseFloat(percent) >= 30
+                    ? "😢"
+                    : "😭"
   return (
     <CustomDialog open={open} onClose={onClose}>
       <CustomDialogTitle>
