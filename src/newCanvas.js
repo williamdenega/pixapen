@@ -398,7 +398,7 @@ const GridCanvas = () => {
     setIsDrawing(false);
     setFilledSquares([]);
     setShowSettings(false);
-    setReady(true);
+    // setReady(true);
     setDone(false);
     setIsDrawingAllowed(false);
     setCountdown(4);  // Reset countdown
@@ -415,24 +415,23 @@ const GridCanvas = () => {
       missingTargetPointsCount: null,
       percent: null,
     });
-
     // Clear any timeouts or intervals if necessary
     if (drawingTimeoutRef.current) {
       clearTimeout(drawingTimeoutRef.current);
       drawingTimeoutRef.current = null;
     }
-
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-
     // Optionally clear the canvas if necessary
     const canvas = canvasRef.current;
     if (canvas) {
       const ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas
     }
+
+    handlePlay()
   };
 
 
