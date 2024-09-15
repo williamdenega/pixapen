@@ -453,7 +453,7 @@ const GridCanvas = () => {
   useEffect(() => {
     if (done) {
       let animationFrameId;
-      let framesPerCell = 10; // Adjust this value to control animation speed
+      let framesPerCell = 6; // Adjust this value to control animation speed
       let frameCount = 0;
       let index = 0;
 
