@@ -452,7 +452,7 @@ const GridCanvas = () => {
   useEffect(() => {
     if (done) {
       let animationFrameId;
-      let framesPerCell = 6; // Adjust this value to control animation speed
+      let framesPerCell = 5; // Adjust this value to control animation speed
       let frameCount = 0;
       let index = 0;
 
@@ -640,9 +640,7 @@ const GridCanvas = () => {
                           </Box>
                         </Grid>
                         <Grid item xs={12}>
-
-
-                          <Button
+                          {done && <Button
                             variant="contained"
                             onClick={handleBack}
                             startIcon={<ArrowBackIcon />}
@@ -663,7 +661,8 @@ const GridCanvas = () => {
                             }}
                           >
                             Back
-                          </Button>
+                          </Button>}
+
                         </Grid>
                       </Grid>
                     )}
