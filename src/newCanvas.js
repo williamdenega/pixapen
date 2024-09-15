@@ -571,7 +571,7 @@ const GridCanvas = () => {
                             backgroundColor: "#FFFFFF", // white background
                             color: "#000000", // black text
                             border: "3px solid #000000", // bold border
-                            borderRadius: "0px", // rounded corners
+                            borderRadius: "4px", // rounded corners
                             boxShadow: "4px 4px 8px rgba(0, 0, 0, 0.5)", // subtle shadow
                             textTransform: "uppercase", // all caps
                             letterSpacing: "1px", // slightly spaced letters
@@ -613,7 +613,7 @@ const GridCanvas = () => {
                               backgroundColor: "white",
                               padding: 0,
                               display: "inline-block",
-                              border: "1px solid black",
+                              border: "3px solid black",
                               borderRadius: "4px",
                             }}
                           >
@@ -654,7 +654,7 @@ const GridCanvas = () => {
                               backgroundColor: "#FFFFFF", // White background
                               color: "#000000", // Black text
                               border: "3px solid #000000", // Bold border
-                              borderRadius: "0px", // Remove border radius to match the Play button
+                              borderRadius: "4px", // Remove border radius to match the Play button
                               boxShadow: "4px 4px 8px rgba(0, 0, 0, 0.5)", // Subtle shadow
                               textTransform: "uppercase", // Uppercase text
                               letterSpacing: "1px", // Slightly spaced letters
