@@ -8,8 +8,9 @@ import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 import ShareIcon from "@mui/icons-material/Share";
+import ReplayIcon from '@mui/icons-material/Replay';
 import { styled } from "@mui/material/styles";
-
+// import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 // Font families
 const titleFontFamily = '"Pixelify Sans", "Press Start 2P", monospace';
 const bodyFontFamily = '"Arial", "Roboto", sans-serif';
@@ -62,7 +63,7 @@ const StyledListItem = styled("li")({
   marginBottom: "8px",
 });
 
-const ReportDialog = ({ open, onClose, scoreData }) => {
+const ReportDialog = ({ open, onClose, scoreData, puzzleType, handleRedo }) => {
   const distanceCounts = scoreData?.distanceCounts || {};
   const missingTargetPointsCount = scoreData?.missingTargetPointsCount || 0;
   const percent = scoreData?.percent || "0.00";
@@ -122,7 +123,7 @@ const ReportDialog = ({ open, onClose, scoreData }) => {
   return (
     <CustomDialog open={open} onClose={onClose}>
       <CustomDialogTitle>
-        RESULTS
+        {puzzleType === 'daily' ? 'RESULTS' : "PRACTICE MODE"}
         <CloseButton onClick={onClose}>
           <CloseIcon />
         </CloseButton>
@@ -186,9 +187,9 @@ const ReportDialog = ({ open, onClose, scoreData }) => {
         </StyledList>
       </DialogContent>
       <DialogActions sx={{ justifyContent: "center", padding: 2 }}>
-        <Button
+        {/* <Button
           variant="contained"
-          endIcon={<ShareIcon />}
+          startIcon={<ArrowBackIcon />}
           sx={{
             fontFamily: bodyFontFamily,
             fontSize: "1.5rem",
@@ -203,10 +204,58 @@ const ReportDialog = ({ open, onClose, scoreData }) => {
               backgroundColor: "#4db4c1",
             },
           }}
-          onClick={handleShare}
+          onClick={handleRedo}
         >
-          Share
-        </Button>
+          BACK
+        </Button> */}
+        {puzzleType == 'daily' ?
+
+          <Button
+            variant="contained"
+            endIcon={<ShareIcon />}
+            sx={{
+              fontFamily: bodyFontFamily,
+              fontSize: "1.5rem",
+              padding: "16px 32px",
+              backgroundColor: "#66CED6",
+              color: "#000",
+              border: "4px solid #000",
+              borderRadius: "0px",
+              boxShadow: "4px 4px 0px rgba(0, 0, 0, 0.2)",
+              textTransform: "uppercase",
+              "&:hover": {
+                backgroundColor: "#4db4c1",
+              },
+            }}
+            onClick={handleShare}
+          >
+            Share
+          </Button>
+          :
+          <Button
+            variant="contained"
+            startIcon={<ReplayIcon />}
+            sx={{
+              fontFamily: bodyFontFamily,
+              fontSize: "1.5rem",
+              padding: "16px 32px",
+              backgroundColor: "#66CED6",
+              color: "#000",
+              border: "4px solid #000",
+              borderRadius: "0px",
+              boxShadow: "4px 4px 0px rgba(0, 0, 0, 0.2)",
+              textTransform: "uppercase",
+              "&:hover": {
+                backgroundColor: "#4db4c1",
+              },
+            }}
+            onClick={handleRedo}
+          >
+            Re-Try
+          </Button>
+
+        }
+
       </DialogActions>
     </CustomDialog>
   );

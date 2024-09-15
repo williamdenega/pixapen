@@ -21,7 +21,7 @@ import {
 import DrawIcon from '@mui/icons-material/Draw';
 import SettingsIcon from "@mui/icons-material/Settings";
 import seedrandom from 'seedrandom';
-
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 const GridCanvas = () => {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -38,6 +38,9 @@ const GridCanvas = () => {
   const intervalRef = useRef(null);
   const [showDialog, setShowDialog] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [animationComplete, setAnimationComplete] = useState(false);
+  const [puzzleType, setPuzzleType] = useState('daily'); // or 'daily' as default
+
   //CONSTANTS
   const radius = 5;
   const size = 15;
@@ -175,35 +178,10 @@ const GridCanvas = () => {
     }
   }, [drawGrid, isDrawingAllowed]);
 
-  useEffect(() => {
-    if (done) {
-      const calculateAndDrawResults = async () => {
-        const newCoords = await handleCalculateScore();
 
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext("2d");
 
-        const maxDistance = Math.max(
-          ...newCoords.map(([, , distance]) => distance),
-          3
-        );
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        coords.forEach(([row, col]) => fillCell(ctx, row, col, canvas));
-        newCoords.forEach(([row, col, distance]) =>
-          fillCell(ctx, row, col, canvas, distance, maxDistance)
-        );
-      };
 
-      calculateAndDrawResults();
-
-      const reportTimer = setTimeout(() => {
-        setShowReport(true);
-      }, 500);
-
-      return () => clearTimeout(reportTimer);
-    }
-  }, [done]);
 
   const interpolateColor = (distance, maxDistance) => {
     const ratio = distance / maxDistance;
@@ -330,10 +308,12 @@ const GridCanvas = () => {
 
     if (type === 'daily') {
       const newCoords = getDailyPath(size, radius, pathLength, rng);
+      setPuzzleType('daily')
       setCoords(newCoords);
     } else {
       const newCoords = getRandomPath(size, radius, pathLength, rng);
       setCoords(newCoords);
+      setPuzzleType('practice')
     }
 
     setReady(true);
@@ -365,10 +345,96 @@ const GridCanvas = () => {
   };
 
   const handleCanvasClick = () => {
-    if (done) {
+    if (done && animationComplete) {
       setShowReport(true);
     }
   };
+
+  const handleBack = () => {
+    // Reset all the state values to their initial values
+    setIsDrawing(false);
+    setFilledSquares([]);
+    setShowSettings(false);
+    setReady(false);
+    setDone(false);
+    setIsDrawingAllowed(false);
+    setCountdown(4);  // Reset countdown
+    setDistanceCounts({});
+    setRemainingTime(5);  // Reset timer
+    setShowDialog(false);
+    setShowReport(false);
+    setAnimationComplete(false);
+    setPuzzleType('daily');  // Reset puzzle type if necessary
+    setCoords([]);
+    // setCanvasSize({ width: 600, height: 600 });  // Reset canvas size
+    setScoreData({
+      distanceCounts: null,
+      missingTargetPointsCount: null,
+      percent: null,
+    });
+
+    // Clear any timeouts or intervals if necessary
+    if (drawingTimeoutRef.current) {
+      clearTimeout(drawingTimeoutRef.current);
+      drawingTimeoutRef.current = null;
+    }
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    // Optionally clear the canvas if necessary
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas
+    }
+  };
+
+
+  const handleRedo = () => {
+    // Reset all the state values to their initial values
+    setIsDrawing(false);
+    setFilledSquares([]);
+    setShowSettings(false);
+    setReady(true);
+    setDone(false);
+    setIsDrawingAllowed(false);
+    setCountdown(4);  // Reset countdown
+    setDistanceCounts({});
+    setRemainingTime(5);  // Reset timer
+    setShowDialog(false);
+    setShowReport(false);
+    setAnimationComplete(false);
+    setPuzzleType('practice');  // Reset puzzle type if necessary
+    setCoords([]);
+    // setCanvasSize({ width: 600, height: 600 });  // Reset canvas size
+    setScoreData({
+      distanceCounts: null,
+      missingTargetPointsCount: null,
+      percent: null,
+    });
+
+    // Clear any timeouts or intervals if necessary
+    if (drawingTimeoutRef.current) {
+      clearTimeout(drawingTimeoutRef.current);
+      drawingTimeoutRef.current = null;
+    }
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    // Optionally clear the canvas if necessary
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas
+    }
+  };
+
 
   const pointsMapping = {
     0: 15,
@@ -383,22 +449,65 @@ const GridCanvas = () => {
     9: 1,
   };
 
-  const calculateTotalPoints = (distanceCounts) => {
-    return Object.entries(distanceCounts).reduce((total, [key, value]) => {
-      // Convert key to number for comparison
-      const distance = Number(key);
 
-      // Check if distance is 5 or less
-      if (distance <= 5) {
-        const points = pointsMapping[key] || 0; // Get points from mapping
-        return total + value * points; // Add to total
-      }
+  useEffect(() => {
+    if (done) {
+      let animationFrameId;
+      let framesPerCell = 10; // Adjust this value to control animation speed
+      let frameCount = 0;
+      let index = 0;
 
-      return total; // If distance > 5, add 0 points
-    }, 0);
-  };
+      const calculateAndDrawResults = async () => {
+        try {
+          const newCoords = await handleCalculateScore();
 
-  const totalPoints = calculateTotalPoints(distanceCounts);
+          const canvas = canvasRef.current;
+          const ctx = canvas.getContext("2d");
+
+          const maxDistance = Math.max(
+            ...newCoords.map(([, , distance]) => distance),
+            3
+          );
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          coords.forEach(([row, col]) => fillCell(ctx, row, col, canvas));
+
+          const animateDrawing = () => {
+            frameCount++;
+            if (frameCount >= framesPerCell) {
+              frameCount = 0; // Reset frameCount
+              if (index < newCoords.length) {
+                const [row, col, distance] = newCoords[index];
+                fillCell(ctx, row, col, canvas, distance, maxDistance);
+                index++;
+              } else {
+                // Animation is complete
+                setAnimationComplete(true); // Update the state
+                setShowReport(true)
+                return; // Exit the function to stop the animation loop
+              }
+            }
+            animationFrameId = requestAnimationFrame(animateDrawing);
+          };
+
+          // Start the animation
+          animateDrawing();
+        } catch (error) {
+          console.error("Error in calculateAndDrawResults:", error);
+        }
+      };
+
+      calculateAndDrawResults();
+
+      return () => {
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+        }
+      };
+    }
+  }, [done, coords]);
+
+  // const totalPoints = calculateTotalPoints(distanceCounts);
 
   return (
     <AuthWrapper1>
@@ -477,15 +586,12 @@ const GridCanvas = () => {
                         <Grid item xs={12}>
                           <Box
                             sx={{
-                              //   backgroundColor: "lightblue",
-                              height: "40px", // Adjust height to fit the text
-                              width: canvasSize.width, // Full width of the canvas
-                              //   borderBottom: "1px solid blue",
+                              height: "40px",
+                              width: canvasSize.width,
                               display: "flex",
-                              //    fontFamily: "Luckiest Guy, Pixelify Sans",
-                              alignItems: "center", // Center text vertically
-                              justifyContent: "center", // Center text horizontally
-                              mb: 0, // No margin-bottom
+                              alignItems: "center",
+                              justifyContent: "space-between", // Position items at opposite ends
+                              mb: 0,
                             }}
                           >
                             {isDrawing && (
@@ -533,6 +639,32 @@ const GridCanvas = () => {
                               }}
                             />
                           </Box>
+                        </Grid>
+                        <Grid item xs={12}>
+
+
+                          <Button
+                            variant="contained"
+                            onClick={handleBack}
+                            startIcon={<ArrowBackIcon />}
+
+                            sx={{
+                              padding: "15px 50px", // Same padding as the Play button
+                              fontSize: "1.5rem", // Font size to match the Play button
+                              backgroundColor: "#FFFFFF", // White background
+                              color: "#000000", // Black text
+                              border: "3px solid #000000", // Bold border
+                              borderRadius: "0px", // Remove border radius to match the Play button
+                              boxShadow: "4px 4px 8px rgba(0, 0, 0, 0.5)", // Subtle shadow
+                              textTransform: "uppercase", // Uppercase text
+                              letterSpacing: "1px", // Slightly spaced letters
+                              fontFamily: "Luckiest Guy, Pixelify Sans", // Custom font
+                              ml: 2, // Adjust margin if needed
+
+                            }}
+                          >
+                            Back
+                          </Button>
                         </Grid>
                       </Grid>
                     )}
@@ -637,6 +769,8 @@ const GridCanvas = () => {
               open={showReport}
               onClose={() => setShowReport(false)}
               scoreData={scoreData}
+              puzzleType={puzzleType}
+              handleRedo={handleRedo}
             />
             <InstructionsDialog
               open={showDialog}
