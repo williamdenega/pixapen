@@ -12,14 +12,14 @@ import AuthWrapper1 from "./AuthWrapper1";
 import AuthCardWrapper from "./AuthCardWrapper";
 import ReportDialog from "./ReportDialog";
 import InstructionsDialog from "./InstructionsDialog";
-import SettingsDialog from "./SettingsDialog";
+// import SettingsDialog from "./SettingsDialog";
 import {
   calculateTotalScoreChebyshev,
   getRandomPath,
   getDailyPath,
 } from "./mathStuff";
 import DrawIcon from '@mui/icons-material/Draw';
-import SettingsIcon from "@mui/icons-material/Settings";
+// import SettingsIcon from "@mui/icons-material/Settings";
 import seedrandom from 'seedrandom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 const GridCanvas = () => {
@@ -710,7 +710,7 @@ const GridCanvas = () => {
                         </Typography>
                       </Box>
 
-                      <Box
+                      {/* <Box
                         sx={{
                           display: "flex",
                           alignItems: "center", // Align items vertically centered
@@ -740,7 +740,7 @@ const GridCanvas = () => {
                         >
                           Settings
                         </Typography>
-                      </Box>
+                      </Box> */}
                       <Typography
                         variant="subtitle1"
                         onClick={() => setShowDialog(true)}
@@ -774,12 +774,12 @@ const GridCanvas = () => {
               open={showDialog}
               onClose={() => setShowDialog(false)}
             />
-            <SettingsDialog
+            {/* <SettingsDialog
               open={showSettings}
               onClose={() => setShowSettings(false)}
             //   currentDifficulty={difficulty}
             //   onSave={handleSaveDifficulty}
-            />
+            /> */}
           </Grid>
         </Grid>
         {/* </Grid> */}
