@@ -22,6 +22,7 @@ import DrawIcon from '@mui/icons-material/Draw';
 // import SettingsIcon from "@mui/icons-material/Settings";
 import seedrandom from 'seedrandom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import PixelatedPlayIcon from './PixelatedPlayIcon';
 const GridCanvas = () => {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -40,13 +41,16 @@ const GridCanvas = () => {
   const [showReport, setShowReport] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
   const [puzzleType, setPuzzleType] = useState('daily'); // or 'daily' as default
-
+  const [playedToday, setPlayedToday] = useState(false)
+  const [date, setDate] = useState('')
   //CONSTANTS
   const radius = 5;
   const size = 15;
   const pathLength = 100;
   // const today = new Date().toISOString().split('T')[0];
   // const rng = seedrandom(today);
+
+  const BIRTHDAY = '20240914'
 
   const [coords, setCoords] = useState([]);
   const [canvasSize, setCanvasSize] = useState({ width: 600, height: 600 });
@@ -99,27 +103,37 @@ const GridCanvas = () => {
 
   useEffect(() => {
     if (ready) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
-      if (countdown > 0) {
-        drawCountdown(ctx);
-
-        const timer = setTimeout(() => {
-          setCountdown((prevCountdown) => prevCountdown - 1);
-        }, 1000);
-
-        return () => clearTimeout(timer); // Cleanup timeout if component unmounts or countdown changes
+      if (playedToday && puzzleType == 'daily') {
+        const userCoordsString = localStorage.getItem("userCoords");
+        // const dailyCords = localStorage.getItem("dailyCoords");
+        setFilledSquares(userCoordsString ? JSON.parse(userCoordsString) : []);
+        // setCoords(dailyCords ? JSON.parse(userCoordsString) : []);
+        setDone(true)
       } else {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // console.log(coords);
-        coords.forEach(([row, col]) => fillCell(ctx, row, col, canvas));
-        const displayTimer = setTimeout(() => {
+
+
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+        if (countdown > 0) {
+          drawCountdown(ctx);
+
+          const timer = setTimeout(() => {
+            setCountdown((prevCountdown) => prevCountdown - 1);
+          }, 1000);
+
+          return () => clearTimeout(timer); // Cleanup timeout if component unmounts or countdown changes
+        } else {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
-          setIsDrawingAllowed(true);
-        }, 1000);
-        return () => {
-          clearTimeout(displayTimer);
-        };
+          // console.log(coords);
+          coords.forEach(([row, col]) => fillCell(ctx, row, col, canvas));
+          const displayTimer = setTimeout(() => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            setIsDrawingAllowed(true);
+          }, 1000);
+          return () => {
+            clearTimeout(displayTimer);
+          };
+        }
       }
     }
   }, [ready, countdown, coords]);
@@ -146,9 +160,20 @@ const GridCanvas = () => {
   }, []); // Empty dependency array means this runs only once
 
   useEffect(() => {
+    const now = new Date();
+    const options = { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' };
+    const today = new Date().toISOString().split('T')[0].replace(/-/g, ''); // "YYYYMMDD"
+    setDate(today)
     // Check if the flag is already set in localStorage
     const hasVisited = localStorage.getItem("hasVisited");
-
+    const lastPlayed = localStorage.getItem("lastPlayed");
+    // console.log(lastPlayed);
+    if (lastPlayed === today) {
+      console.log("ALREADY PLAYED");
+      const userCoordsString = localStorage.getItem("userCoords");
+      setFilledSquares(userCoordsString ? JSON.parse(userCoordsString) : []);
+      setPlayedToday(true)
+    }
     if (!hasVisited) {
       // Set the flag to indicate that the user has visited
       localStorage.setItem("hasVisited", "true");
@@ -171,6 +196,10 @@ const GridCanvas = () => {
     // }
 
   }, []);
+  // useEffect(() => {
+  //   console.log(coords);
+  // }, [coords]);
+
 
   useEffect(() => {
     if (isDrawingAllowed) {
@@ -303,13 +332,16 @@ const GridCanvas = () => {
     const utcOffset = now.getTimezoneOffset() * 60000; // in milliseconds
     const easternOffset = -5 * 60 * 60000; // UTC-5 for Eastern Time
     const easternTime = new Date(now.getTime() + utcOffset + easternOffset);
-    const today = easternTime.toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    console.log(today)
     const rng = seedrandom(today);
 
     if (type === 'daily') {
       const newCoords = getDailyPath(size, radius, pathLength, rng);
       setPuzzleType('daily')
       setCoords(newCoords);
+      localStorage.setItem('lastPlayed', today);
+
     } else {
       const newCoords = getRandomPath(size, radius, pathLength, rng);
       setCoords(newCoords);
@@ -327,8 +359,6 @@ const GridCanvas = () => {
         missingTargetPointsCount,
         percent,
       ] = calculateTotalScoreChebyshev(coords, filledSquares, setFilledSquares);
-      // console.log(`Your score: ${score}`);
-      // console.log(result[1]);
       setScoreData({
         distanceCounts,
         // updatedGuessSet,
@@ -353,6 +383,10 @@ const GridCanvas = () => {
   const handleBack = () => {
     // Reset all the state values to their initial values
     setIsDrawing(false);
+    // if (puzzleType == 'practice') {
+
+    //   // setCoords([])
+    // }
     setFilledSquares([]);
     setShowSettings(false);
     setReady(false);
@@ -365,7 +399,7 @@ const GridCanvas = () => {
     setShowReport(false);
     setAnimationComplete(false);
     setPuzzleType('daily');  // Reset puzzle type if necessary
-    setCoords([]);
+    // ;
     // setCanvasSize({ width: 600, height: 600 });  // Reset canvas size
     setScoreData({
       distanceCounts: null,
@@ -459,6 +493,11 @@ const GridCanvas = () => {
       const calculateAndDrawResults = async () => {
         try {
           const newCoords = await handleCalculateScore();
+          if (!playedToday && puzzleType == 'daily') {
+            localStorage.setItem('userCoords', JSON.stringify(newCoords));
+            // localStorage.setItem('dailyCoords', JSON.stringify(coords))
+            setPlayedToday(true)
+          }
 
           const canvas = canvasRef.current;
           const ctx = canvas.getContext("2d");
@@ -497,7 +536,7 @@ const GridCanvas = () => {
       };
 
       calculateAndDrawResults();
-
+      console.log(scoreData)
       return () => {
         if (animationFrameId) {
           cancelAnimationFrame(animationFrameId);
@@ -547,6 +586,19 @@ const GridCanvas = () => {
                   >
                     PIXAPEN
                   </Typography>
+                  {!ready &&
+                    <Typography
+                      variant="subtitle2"
+                      sx={{
+                        textDecoration: "none",
+                        fontSize: "1.5rem", // Increase font size
+                        fontWeight: "bold", // Make the text bold
+                        color: "#000", // Change text color
+                        letterSpacing: "0.5px", // Adjust letter spacing
+                      }}>
+                      A Daily Puzzle Game
+                    </Typography>}
+
                 </Grid>
                 <Grid
                   item
@@ -558,27 +610,37 @@ const GridCanvas = () => {
                   <Box>
                     {!ready ? (<Grid container direction="column" alignItems="center" spacing={5}>
                       <Grid item xs={12}>
+
                         <Button
                           variant="contained"
                           onClick={(e) => handlePlay(e.target.value)}
                           size="large"
-                          value='daily'
+                          value="daily"
+                          // endIcon={<PixelatedPlayIcon sx={{ transform: 'scale(2)' }} />}
                           style={{
                             padding: "30px 80px",
                             fontSize: "3rem",
-                            // fontFamily: 'Comic Sans MS, cursive, sans-serif', // 90s font
-                            backgroundColor: "#FFFFFF", // white background
-                            color: "#000000", // black text
-                            border: "3px solid #000000", // bold border
-                            borderRadius: "4px", // rounded corners
-                            boxShadow: "4px 4px 8px rgba(0, 0, 0, 0.5)", // subtle shadow
-                            textTransform: "uppercase", // all caps
-                            letterSpacing: "1px", // slightly spaced letters
+                            backgroundColor: "#FFFFFF",
+                            color: "#000000",
+                            border: "3px solid #000000",
+                            borderRadius: "4px",
+                            boxShadow: "4px 4px 8px rgba(0, 0, 0, 0.5)",
+                            textTransform: "uppercase",
+                            letterSpacing: "1px",
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                           }}
                         >
-                          Play
+                          {playedToday ? "See Results" : "Play"}
                         </Button>
                       </Grid>
+                      {/* <Grid item>
+                        <Typography
+                          variant="h5">
+                          Puzzle Number: {date - BIRTHDAY}
+                        </Typography>
+                      </Grid> */}
                     </Grid>
                     ) : (
                       <Grid container direction="column" alignItems="center">
@@ -677,6 +739,7 @@ const GridCanvas = () => {
                 >
                   {!ready && (
                     <>
+
                       <Box
                         sx={{
                           display: "flex",
@@ -757,6 +820,17 @@ const GridCanvas = () => {
                         }}
                       >
                         How to Play?
+                      </Typography>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          textDecoration: "none",
+                          fontSize: "1.5rem", // Increase font size
+                          fontWeight: "bold", // Make the text bold
+                          color: "#000", // Change text color
+                          letterSpacing: "0.5px", // Adjust letter spacing
+                        }}>
+                        Puzzle Number: {date - BIRTHDAY}
                       </Typography>
                     </>
                   )}
